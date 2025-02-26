@@ -1,0 +1,81 @@
+---
+title: "Box Plot and Bar Graph"
+author: "Mizza"
+date: "2025-02-26"
+output: html_document
+---
+
+```{r}
+# Creating the data frame
+data <- data.frame(
+  States = c("Bihar", "Chhattisgarh", "Gujarat", "Jharkhand", "Karnataka", 
+             "Kerala", "Madhya Pradesh", "Maharashtra", "Rajasthan", "Tamil Nadu", 
+             "Uttar Pradesh", "West Bengal"),
+  Mean_Years_of_Schooling = c(7.3, 8.2, 8.3, 7.6, 9.2, 10.8, 7.7, 10, 7.3, 9.2, 7.7, 7.9),
+  NEET = c(31.9, 22.7, 23.6, 28.5, 18.2, 21.9, 25.1, 17.2, 21, 17.6, 34.1, 30.2),
+  GDP_Per_Capita = c(54111000, 137329000, 273558000, 91874000, 304474000, 
+                     263945000, 132010000, 252389000, 151559000, 275583000, 
+                     83636000, 139442000)
+)
+```
+
+
+```{r}
+# Categorizing states into High MYS and Low MYS
+data$MYS_Category <- ifelse(data$Mean_Years_of_Schooling >= 8.7, "High_MYS", "Low_MYS")
+# Running t-test
+t.test(GDP_Per_Capita ~ MYS_Category, data = data, var.equal = TRUE)
+
+
+# Categorizing states into High NEET and Low NEET
+data$NEET_Category <- ifelse(data$NEET >= 25.6, "High_NEET", "Low_NEET")
+# Running t-test
+t.test(GDP_Per_Capita ~ NEET_Category, data = data, var.equal = TRUE)
+
+
+```
+
+#boxplot
+```{r}
+# Boxplot for MYS category vs GDP per capita
+ggplot(data, aes(x = MYS_Category, y = GDP_Per_Capita, fill = MYS_Category)) +
+  geom_boxplot() +
+  labs(title = "GDP Per Capita by MYS Category",
+       x = "MYS Category (High vs Low)",
+       y = "GDP Per Capita") +
+  theme_minimal()
+
+# Boxplot for NEET category vs GDP per capita
+ggplot(data, aes(x = NEET_Category, y = GDP_Per_Capita, fill = NEET_Category)) +
+  geom_boxplot() +
+  labs(title = "GDP Per Capita by NEET Category",
+       x = "NEET Category (High vs Low)",
+       y = "GDP Per Capita") +
+  theme_minimal()
+```
+
+
+#bar chart
+```{r}
+# Bar chart for GDP per capita state-wise grouped by MYS Category
+ggplot(data, aes(x = reorder(States, GDP_Per_Capita), y = GDP_Per_Capita, fill = MYS_Category)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "State-wise GDP Per Capita by MYS Category",
+       x = "States",
+       y = "GDP Per Capita") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +  # Rotate state names for better visibility
+  scale_fill_manual(values = c("High_MYS" = "skyblue", "Low_MYS" = "salmon"))
+
+
+# Bar chart for GDP per capita state-wise grouped by NEET Category
+ggplot(data, aes(x = reorder(States, GDP_Per_Capita), y = GDP_Per_Capita, fill = NEET_Category)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "State-wise GDP Per Capita by NEET Category",
+       x = "States",
+       y = "GDP Per Capita") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +  # Rotate state names for better visibility
+  scale_fill_manual(values = c("High_NEET" = "skyblue", "Low_NEET" = "salmon"))
+
+```
