@@ -1,0 +1,42 @@
+---
+title: "Untitled"
+author: "Mizza"
+date: "2025-04-02"
+output: html_document
+---
+
+```{r}
+library(ggplot2)
+
+# Creating the dataset with states in the given order
+gantt_data <- data.frame(
+  State = factor(c("India", "Bihar", "Chhattisgarh", "Gujarat", "Jharkhand", "Karnataka",
+                   "Kerala", "Madhya Pradesh", "Maharashtra", "Rajasthan", "Tamil Nadu",
+                   "Uttar Pradesh", "West Bengal"),
+                 levels = c("India", "Bihar", "Chhattisgarh", "Gujarat", "Jharkhand", "Karnataka",
+                            "Kerala", "Madhya Pradesh", "Maharashtra", "Rajasthan", "Tamil Nadu",
+                            "Uttar Pradesh", "West Bengal")),  # Preserving the exact order
+  Start_Year = c(2016, 2031, 2016, 2011, 2021, 2011, 2011, 2021, 2021, 2021, 2011, 2021, 2011),
+  End_Year = c(2036, 2036, 2036, 2031, 2036, 2031, 2016, 2036, 2036, 2036, 2021, 2036, 2026)
+)
+
+# Plotting the Gantt chart with exact state order and marked years
+ggplot(gantt_data, aes(y = State, xmin = Start_Year, xmax = End_Year)) +
+  geom_rect(aes(xmin = Start_Year, xmax = End_Year, ymin = as.numeric(State) - 0.3, 
+                ymax = as.numeric(State) + 0.3), fill = "black", alpha = 0.8) +  
+  scale_x_continuous(breaks = c(2011, 2016, 2021, 2026, 2031, 2036)) +  # Ensuring only these years are marked
+  labs(title = "Duration of Demographic Window in Indian States",
+       x = "Year", y = "State") +
+  theme_minimal() +
+  theme(
+    legend.position = "none",
+    panel.grid.major = element_line(color = "black"),  # Black major grid lines
+    panel.grid.minor = element_line(color = "black"),  # Black minor grid lines
+    axis.text = element_text(color = "black"),  # Black axis text
+    axis.title = element_text(color = "black"),  # Black axis title
+    plot.title = element_text(color = "black", face = "bold")  # Black and bold title
+  )
+
+```
+
+

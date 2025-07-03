@@ -1,0 +1,1237 @@
+---
+title: "Untitled"
+author: "Mizza"
+date: "2025-04-02"
+output: html_document
+---
+
+
+#India
+```{r}
+# Load necessary libraries
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+# Create a data frame with the given population data
+population_data <- data.frame(
+  Age_Group = c("0-14", "15-19", "20-24", "25-29", "30-34", "35-39", "40-44", "45-49", "50-54", "55-59", "60-64", "65-69", "70-74", "75-79", "80+"),
+  Male_2011 = c(207776, 63994, 57845, 51425, 46065, 42166, 37672, 32032, 25914, 20940, 17515, 13615, 10546, 5471, 2943),
+  Female_2011 = c(190538, 57770, 53769, 49655, 45198, 40959, 35670, 29722, 24162, 20466, 17844, 13808, 10837, 5377, 3582),
+  Male_2016 = c(202313, 67223, 63521, 57272, 50782, 45318, 41280, 36602, 30738, 24403, 19133, 15198, 11002, 7703, 4496),
+  Female_2016 = c(184133, 60871, 57356, 53357, 49250, 44787, 40497, 35107, 29016, 23307, 19288, 16114, 11723, 8367, 5161),
+  Male_2021 = c(195942, 64862, 66770, 62944, 56614, 50027, 44450, 40204, 35235, 29082, 22465, 16823, 12546, 8269, 6637),
+  Female_2021 = c(177343, 59420, 60474, 56956, 52961, 48836, 44315, 39903, 34331, 28062, 22079, 17583, 13904, 9294, 7970),
+  Male_2026 = c(190259, 61038, 64463, 66201, 62271, 55840, 49144, 43374, 38803, 33466, 26934, 19954, 14104, 9615, 8205),
+  Female_2026 = c(171127, 56562, 59066, 60085, 56562, 52547, 48361, 43710, 39082, 33282, 26700, 20300, 15394, 11266, 10357),
+  Male_2031 = c(180359, 61878, 60719, 63970, 65561, 61499, 54936, 48049, 41968, 36980, 31158, 24126, 16941, 10980, 9897),
+  Female_2031 = c(163787, 55038, 56263, 58725, 59700, 56154, 52074, 47746, 42866, 37965, 31787, 24718, 17981, 12701, 13137),
+  Male_2036 = c(170499, 59432, 61671, 60367, 63466, 64879, 60631, 53839, 46615, 40135, 34600, 28119, 20703, 13358, 11670),
+  Female_2036 = c(155610, 53270, 54786, 55972, 58383, 59299, 55678, 51451, 46881, 41721, 36373, 29601, 22111, 15053, 15850)
+)
+
+# Convert data to long format for ggplot
+population_long <- population_data %>%
+  pivot_longer(cols = -Age_Group, names_to = "Year_Gender", values_to = "Population") %>%
+  separate(Year_Gender, into = c("Gender", "Year"), sep = "_", extra = "merge") %>%
+  mutate(Population = ifelse(Gender == "Male", -Population, Population))  # Make male values negative for pyramid
+
+# Plot the population pyramid for all years
+ggplot(population_long, aes(x = Age_Group, y = Population, fill = Gender)) +
+  geom_bar(stat = "identity", width = 0.8) +
+  coord_flip() +  # Flip for pyramid style
+  scale_y_continuous(labels = abs) +  # Show absolute values on y-axis
+  facet_wrap(~Year, ncol = 2) +  # Create separate pyramids for each year
+  labs(title = "India",
+       x = "Age Group",
+       y = "Population (in thousands)",
+       fill = "Gender") +
+  scale_fill_manual(values = c("Male" = "#ce4a37", "Female" = "#38406b")) +
+  theme_minimal(base_size = 14) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rotate x-axis labels for readability
+
+# Define age groups
+youth_groups <- c("0-14")
+working_age_groups <- c("15-19", "20-24", "25-29", "30-34", "35-39", "40-44", "45-49", "50-54", "55-59")
+elderly_groups <- c("60-64", "65-69", "70-74", "75-79", "80+")
+
+# Function to calculate dependency ratios
+calculate_dependency_ratios <- function(year) {
+  youth_pop <- sum(population_data %>% filter(Age_Group %in% youth_groups) %>% 
+                     select(starts_with(paste0("Male_", year)), starts_with(paste0("Female_", year))) %>% rowSums())
+  
+  working_age_pop <- sum(population_data %>% filter(Age_Group %in% working_age_groups) %>% 
+                           select(starts_with(paste0("Male_", year)), starts_with(paste0("Female_", year))) %>% rowSums())
+  
+  elderly_pop <- sum(population_data %>% filter(Age_Group %in% elderly_groups) %>% 
+                       select(starts_with(paste0("Male_", year)), starts_with(paste0("Female_", year))) %>% rowSums())
+  
+  dependency_ratio <- (youth_pop + elderly_pop) / working_age_pop
+  youth_dependency_ratio <- youth_pop / working_age_pop
+  elderly_dependency_ratio <- elderly_pop / working_age_pop
+  
+  return(data.frame(
+    Year = year,
+    Dependency_Ratio = dependency_ratio,
+    Youth_Dependency_Ratio = youth_dependency_ratio,
+    Elderly_Dependency_Ratio = elderly_dependency_ratio
+  ))
+}
+
+# Years for calculation
+years <- c("2011", "2016", "2021", "2026", "2031", "2036")
+
+# Apply the function to all years
+dependency_ratios <- do.call(rbind, lapply(years, calculate_dependency_ratios))
+
+# Print the results
+print(dependency_ratios)
+```
+
+
+#Rajasthan
+```{r}
+# Load required libraries
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+
+# Create the dataset
+age_data <- data.frame(
+  Age_Group = c("0-14", "15-19", "20-24", "25-29", "30-34", "35-39", "40-44", "45-49", 
+                "50-54", "55-59", "60-64", "65-69", "70-74", "75-79", "80+"),
+  Male_2011 = c(13435, 3912, 3365, 2833, 2443, 2187, 1923, 1629, 1314, 1029, 827, 641, 512, 221, 119),
+  Female_2011 = c(11972, 3476, 3039, 2650, 2358, 2111, 1829, 1520, 1215, 999, 855, 691, 582, 269, 180),
+  Male_2016 = c(13385, 4190, 3824, 3285, 2759, 2372, 2115, 1847, 1547, 1226, 934, 710, 502, 365, 175),
+  Female_2016 = c(11830, 3760, 3430, 3010, 2628, 2337, 2087, 1801, 1488, 1182, 956, 791, 609, 472, 270),
+  Male_2021 = c(13119, 4070, 4097, 3737, 3204, 2683, 2298, 2036, 1760, 1450, 1121, 812, 569, 368, 284),
+  Female_2021 = c(11569, 3706, 3713, 3399, 2986, 2606, 2311, 2057, 1765, 1450, 1134, 889, 704, 502, 451),
+  Male_2026 = c(12773, 3867, 3979, 4006, 3648, 3121, 2604, 2217, 1945, 1657, 1334, 986, 665, 428, 350),
+  Female_2026 = c(11270, 3559, 3659, 3682, 3374, 2963, 2579, 2280, 2019, 1722, 1394, 1061, 798, 588, 585),
+  Male_2031 = c(11874, 4096, 3779, 3890, 3913, 3558, 3033, 2517, 2123, 1837, 1531, 1183, 818, 508, 421),
+  Female_2031 = c(10691, 3617, 3513, 3629, 3656, 3350, 2935, 2546, 2241, 1972, 1660, 1310, 959, 674, 725),
+  Male_2036 = c(11152, 3908, 4045, 3731, 3840, 3859, 3498, 2967, 2440, 2030, 1721, 1381, 1003, 640, 513),
+  Female_2036 = c(10080, 3485, 3570, 3485, 3605, 3631, 3320, 2900, 2505, 2192, 1905, 1567, 1193, 819, 871)
+)
+
+# Reshape data to long format
+age_long <- age_data %>%
+  pivot_longer(cols = -Age_Group, names_to = "Year_Gender", values_to = "Population") %>%
+  separate(Year_Gender, into = c("Gender", "Year"), sep = "_") %>%
+  mutate(Population = ifelse(Gender == "Male", -Population, Population))
+
+# Convert Year to factor for proper ordering
+age_long$Year <- factor(age_long$Year, levels = c("2011", "2016", "2021", "2026", "2031", "2036"))
+
+# Create the age pyramid
+ggplot(age_long, aes(x = Age_Group, y = Population, fill = Gender)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  facet_wrap(~Year, scales = "free_y") +
+  scale_y_continuous(labels = abs) +
+  scale_fill_manual(values = c("Male" = "#ce4a37", "Female" = "#38406b")) +
+  labs(title = "Rajasthan",
+       x = "Age Group",
+       y = "Population",
+       fill = "Gender") +
+  theme_minimal()
+
+# Load necessary library
+library(dplyr)
+
+# Function to calculate dependency ratios
+calculate_dependency_ratios <- function(data, year) {
+  # Extract relevant columns
+  total_population <- rowSums(data[, paste0(c("Male_", "Female_"), year)])
+  
+  # Define age group indices
+  youth_index <- which(data$Age_Group == "0-14")
+  working_age_index <- which(data$Age_Group %in% c("15-19", "20-24", "25-29", "30-34", 
+                                                   "35-39", "40-44", "45-49", "50-54", "55-59"))
+  elderly_index <- which(data$Age_Group %in% c("60-64", "65-69", "70-74", "75-79", "80+"))
+  
+  # Calculate population sums for each category
+  youth_population <- sum(total_population[youth_index])
+  working_age_population <- sum(total_population[working_age_index])
+  elderly_population <- sum(total_population[elderly_index])
+  
+  # Compute dependency ratios
+  dependency_ratio <- (youth_population + elderly_population) / working_age_population
+  youth_dependency_ratio <- youth_population / working_age_population
+  elderly_dependency_ratio <- elderly_population / working_age_population
+  
+  # Return results as a named vector
+  return(c(Dependency_Ratio = dependency_ratio, 
+           Youth_Dependency_Ratio = youth_dependency_ratio, 
+           Elderly_Dependency_Ratio = elderly_dependency_ratio))
+}
+
+# Define the years to calculate dependency ratios
+years <- c("2011", "2016", "2021", "2026", "2031", "2036")
+
+# Create a table with dependency ratios for all years
+dependency_ratios_table <- as.data.frame(t(sapply(years, function(y) calculate_dependency_ratios(age_data, y))))
+
+# Add year column
+dependency_ratios_table <- dependency_ratios_table %>%
+  mutate(Year = years) %>%
+  select(Year, everything())
+
+# Print the table
+print(dependency_ratios_table)
+
+
+```
+
+
+#Uttar Pradesh
+```{r}
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+# Uttar Pradesh population data
+uttar_pradesh_population <- data.frame(
+  Age_Group = c("0-14", "15-19", "20-24", "25-29", "30-34", "35-39", "40-44", "45-49", "50-54", "55-59", "60-64", "65-69", "70-74", "75-79", "80+"),
+  Year_2011_Male = c(40317, 12025, 9727, 7757, 6738, 6209, 5438, 4470, 3568, 2973, 2653, 2123, 1665, 801, 431),
+  Year_2011_Female = c(36197, 10541, 8616, 7289, 6631, 5965, 5014, 4029, 3260, 2880, 2568, 1965, 1503, 650, 434),
+  Year_2016_Male = c(40030, 13110, 11704, 9470, 7543, 6538, 6010, 5217, 4247, 3315, 2672, 2223, 1646, 1161, 638),
+  Year_2016_Female = c(35644, 11609, 10167, 8433, 7164, 6524, 5863, 4913, 3906, 3114, 2687, 2285, 1635, 1112, 601),
+  Year_2021_Male = c(39423, 12422, 12773, 11424, 9236, 7336, 6345, 5787, 4981, 3974, 3012, 2285, 1780, 1199, 960),
+  Year_2021_Female = c(34939, 11144, 11213, 9971, 8301, 7057, 6423, 5756, 4777, 3747, 2925, 2421, 1944, 1258, 989),
+  Year_2026_Male = c(38727, 11067, 12081, 12480, 11170, 9009, 7136, 6125, 5544, 4686, 3640, 2614, 1869, 1332, 1171),
+  Year_2026_Female = c(34162, 10075, 10738, 11009, 9828, 8187, 6954, 6313, 5608, 4597, 3537, 2659, 2091, 1535, 1325),
+  Year_2031_Male = c(35319, 12507, 10727, 11792, 12217, 10925, 8790, 6910, 5887, 5241, 4325, 3203, 2179, 1431, 1376),
+  Year_2031_Female = c(31561, 10887, 9667, 10542, 10863, 9705, 8078, 6843, 6162, 5414, 4361, 3244, 2329, 1689, 1716),
+  Year_2036_Male = c(31867, 11940, 12154, 10447, 11537, 11967, 10683, 8536, 6657, 5582, 4861, 3838, 2701, 1691, 1555),
+  Year_2036_Female = c(28760, 10533, 10466, 9482, 10405, 10736, 9586, 7958, 6690, 5962, 5155, 4027, 2872, 1913, 2067)
+)
+
+# Convert data to long format
+uttar_pradesh_long <- uttar_pradesh_population %>%
+  pivot_longer(cols = -Age_Group, 
+               names_to = c("Year", "Gender"), 
+               names_pattern = "Year_(\\d+)_(Male|Female)", 
+               values_to = "Population") %>%
+  mutate(
+    Population = ifelse(Gender == "Male", -Population, Population) # Negative values for Male
+  )
+
+# Plot age pyramid
+ggplot(uttar_pradesh_long, aes(x = Age_Group, y = Population, fill = Gender)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  scale_y_continuous(labels = abs) + # Keep labels positive
+  scale_fill_manual(values = c("Male" = "#ce4a37", "Female" = "#38406b")) +
+  facet_wrap(~Year) + # Facet by Year
+  theme_minimal() +
+  labs(title = "Uttar Pradesh - Population Age Pyramid",
+       x = "Age Group",
+       y = "Population",
+       fill = "Gender") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Load necessary library
+library(dplyr)
+
+# Function to calculate dependency ratios
+calculate_dependency_ratios <- function(data, year) {
+  # Extract relevant columns
+  total_population <- rowSums(data[, paste0("Year_", year, "_", c("Male", "Female"))])
+  
+  # Define age group indices
+  young_age_index <- which(data$Age_Group == "0-14")
+  working_population_index <- which(data$Age_Group %in% c("15-19", "20-24", "25-29", "30-34", 
+                                                          "35-39", "40-44", "45-49", "50-54", "55-59"))
+  senior_population_index <- which(data$Age_Group %in% c("60-64", "65-69", "70-74", "75-79", "80+"))
+  
+  # Calculate population sums for each category
+  young_population <- sum(total_population[young_age_index])
+  working_population <- sum(total_population[working_population_index])
+  senior_population <- sum(total_population[senior_population_index])
+  
+  # Compute dependency ratios
+  overall_dependency <- (young_population + senior_population) / working_population
+  youth_dependency <- young_population / working_population
+  elderly_dependency <- senior_population / working_population
+  
+  # Return results as a named vector
+  return(c(Overall_Dependency = overall_dependency, 
+           Youth_Dependency = youth_dependency, 
+           Elderly_Dependency = elderly_dependency))
+}
+
+# Define the years to calculate dependency ratios
+years <- c("2011", "2016", "2021", "2026", "2031", "2036")
+
+# Create a table with dependency ratios for all years
+dependency_ratios_up <- as.data.frame(t(sapply(years, function(y) calculate_dependency_ratios(uttar_pradesh_population, y))))
+
+# Add year column
+dependency_ratios_up <- dependency_ratios_up %>%
+  mutate(Year = years) %>%
+  select(Year, everything())
+
+# Print the table
+print(dependency_ratios_up)
+
+```
+
+
+
+#Bihar
+```{r}
+# Load necessary libraries
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+# Create data frame
+bihar_population <- data.frame(
+  Age_Group = c("0-14", "15-19", "20-24", "25-29", "30-34", "35-39", "40-44", "45-49", "50-54", "55-59", "60-64", "65-69", "70-74", "75-79", "80+"),
+  Male_2011 = c(23296, 5551, 4403, 3860, 3554, 3234, 2769, 2255, 1797, 1513, 1394, 1143, 836, 119, 64),
+  Female_2011 = c(21545, 4721, 3948, 3785, 3534, 3074, 2516, 2016, 1640, 1477, 1342, 883, 646, 85, 56),
+  Male_2016 = c(23476, 6795, 5331, 4238, 3726, 3444, 3148, 2688, 2183, 1700, 1389, 1214, 931, 624, 96),
+  Female_2016 = c(21721, 6016, 4443, 3838, 3714, 3475, 3025, 2466, 1959, 1564, 1372, 1195, 723, 473, 79),
+  Male_2021 = c(22950, 7111, 6552, 5148, 4093, 3611, 3355, 3060, 2606, 2073, 1569, 1222, 1006, 710, 392),
+  Female_2021 = c(21091, 6601, 5708, 4325, 3766, 3655, 3423, 2969, 2401, 1875, 1462, 1235, 999, 548, 321),
+  Male_2026 = c(23054, 6963, 6853, 6352, 4991, 3973, 3520, 3264, 2971, 2483, 1925, 1395, 1029, 781, 607),
+  Female_2026 = c(20855, 6690, 6274, 5579, 4249, 3708, 3604, 3366, 2899, 2310, 1767, 1333, 1058, 788, 521),
+  Male_2031 = c(23112, 6945, 6694, 6643, 6180, 4859, 3878, 3427, 3173, 2839, 2318, 1728, 1189, 810, 772),
+  Female_2031 = c(21023, 6266, 6345, 6138, 5494, 4189, 3659, 3547, 3292, 2798, 2189, 1626, 1162, 857, 798),
+  Male_2036 = c(22977, 6625, 6663, 6477, 6464, 6036, 4755, 3780, 3334, 3038, 2663, 2098, 1490, 948, 885),
+  Female_2036 = c(20979, 6015, 5906, 6206, 6050, 5426, 4137, 3603, 3474, 3186, 2664, 2030, 1436, 959, 1020)
+)
+
+# Convert data to long format
+bihar_long <- bihar_population %>%
+  pivot_longer(cols = starts_with("Male") | starts_with("Female"),
+               names_to = c("Gender", "Year"),
+               names_pattern = "(Male|Female)_(\\d+)",
+               values_to = "Population") %>%
+  mutate(
+    Population = ifelse(Gender == "Male", -Population, Population) # Negative values for Male
+  )
+
+# Plot age pyramid
+ggplot(bihar_long, aes(x = Age_Group, y = Population, fill = Gender)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  scale_y_continuous(labels = abs) + # Keep labels positive
+  scale_fill_manual(values = c("Male" = "#ce4a37", "Female" = "#38406b")) +
+  facet_wrap(~Year) + # Facet by Year
+  theme_minimal() +
+  labs(title = "Bihar",
+       x = "Age Group",
+       y = "Population",
+       fill = "Gender") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Load necessary library
+library(dplyr)
+
+# Function to calculate dependency ratios
+calculate_dependency_ratios <- function(data, year) {
+  # Extract relevant columns
+  total_population <- rowSums(data[, paste0(c("Male_", "Female_"), year)])
+  
+  # Define age group indices
+  young_age_index <- which(data$Age_Group == "0-14")
+  working_population_index <- which(data$Age_Group %in% c("15-19", "20-24", "25-29", "30-34", 
+                                                          "35-39", "40-44", "45-49", "50-54", "55-59"))
+  senior_population_index <- which(data$Age_Group %in% c("60-64", "65-69", "70-74", "75-79", "80+"))
+  
+  # Calculate population sums for each category
+  young_population <- sum(total_population[young_age_index])
+  working_population <- sum(total_population[working_population_index])
+  senior_population <- sum(total_population[senior_population_index])
+  
+  # Compute dependency ratios
+  total_dependency <- (young_population + senior_population) / working_population
+  child_dependency <- young_population / working_population
+  senior_dependency <- senior_population / working_population
+  
+  # Return results as a named vector
+  return(c(Total_Dependency = total_dependency, 
+           Child_Dependency = child_dependency, 
+           Senior_Citizen_Dependency = senior_dependency))
+}
+
+# Define the years to calculate dependency ratios
+years <- c("2011", "2016", "2021", "2026", "2031", "2036")
+
+# Create a table with dependency ratios for all years
+dependency_ratios_bihar <- as.data.frame(t(sapply(years, function(y) calculate_dependency_ratios(bihar_population, y))))
+
+# Add year column
+dependency_ratios_bihar <- dependency_ratios_bihar %>%
+  mutate(Year = years) %>%
+  select(Year, everything())
+
+# Print the table
+print(dependency_ratios_bihar)
+
+```
+
+
+
+#Chhattisgarh
+```{r}
+# Load necessary libraries
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+# Create data frame for Chhattisgarh
+chhattisgarh_population <- data.frame(
+  Age_Group = c("0-14", "15-19", "20-24", "25-29", "30-34", "35-39", "40-44", "45-49", "50-54", "55-59", "60-64", "65-69", "70-74", "75-79", "80+"),
+  Male_2011 = c(4431, 1325, 1190, 1048, 935, 870, 795, 674, 526, 410, 333, 253, 189, 84, 45),
+  Female_2011 = c(4304, 1296, 1171, 1033, 933, 869, 773, 637, 502, 420, 370, 293, 220, 95, 64),
+  Male_2016 = c(4481, 1413, 1323, 1184, 1039, 922, 853, 774, 648, 491, 364, 275, 182, 121, 62),
+  Female_2016 = c(4310, 1373, 1305, 1164, 1021, 922, 856, 759, 620, 484, 393, 330, 244, 157, 84),
+  Male_2021 = c(4492, 1390, 1412, 1318, 1175, 1026, 906, 832, 746, 609, 443, 308, 208, 125, 93),
+  Female_2021 = c(4279, 1349, 1384, 1298, 1152, 1010, 909, 841, 741, 600, 457, 355, 281, 182, 134),
+  Male_2026 = c(4463, 1345, 1392, 1408, 1308, 1162, 1010, 886, 805, 705, 554, 380, 240, 149, 115),
+  Female_2026 = c(4210, 1305, 1362, 1378, 1286, 1141, 997, 895, 823, 719, 570, 418, 309, 219, 184),
+  Male_2031 = c(4268, 1448, 1348, 1388, 1399, 1296, 1145, 990, 859, 764, 647, 483, 305, 178, 142),
+  Female_2031 = c(4004, 1373, 1321, 1359, 1368, 1275, 1128, 984, 878, 801, 686, 526, 369, 247, 240),
+  Male_2036 = c(4080, 1416, 1452, 1347, 1382, 1387, 1279, 1124, 962, 819, 706, 571, 396, 232, 175),
+  Female_2036 = c(3817, 1336, 1391, 1319, 1350, 1357, 1262, 1114, 966, 856, 768, 638, 470, 302, 295)
+)
+
+# Convert data to long format
+chhattisgarh_long <- chhattisgarh_population %>%
+  pivot_longer(cols = starts_with("Male") | starts_with("Female"),
+               names_to = c("Gender", "Year"),
+               names_pattern = "(Male|Female)_(\\d+)",
+               values_to = "Population") %>%
+  mutate(
+    Population = ifelse(Gender == "Male", -Population, Population) # Negative values for Male
+  )
+
+# Plot age pyramid
+ggplot(chhattisgarh_long, aes(x = Age_Group, y = Population, fill = Gender)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  scale_y_continuous(labels = abs) + # Keep labels positive
+  scale_fill_manual(values = c("Male" = "#ce4a37", "Female" = "#38406b")) +
+  facet_wrap(~Year) + # Facet by Year
+  theme_minimal() +
+  labs(title = "Chhattisgarh",
+       x = "Age Group",
+       y = "Population",
+       fill = "Gender") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Load necessary library
+library(dplyr)
+
+# Function to calculate dependency ratios
+calculate_dependency_ratios <- function(data, year) {
+  # Extract relevant columns
+  total_population <- rowSums(data[, paste0(c("Male_", "Female_"), year)])
+  
+  # Define age group indices
+  young_age_index <- which(data$Age_Group == "0-14")
+  working_population_index <- which(data$Age_Group %in% c("15-19", "20-24", "25-29", "30-34", 
+                                                          "35-39", "40-44", "45-49", "50-54", "55-59"))
+  senior_population_index <- which(data$Age_Group %in% c("60-64", "65-69", "70-74", "75-79", "80+"))
+  
+  # Calculate population sums for each category
+  young_population <- sum(total_population[young_age_index])
+  working_population <- sum(total_population[working_population_index])
+  senior_population <- sum(total_population[senior_population_index])
+  
+  # Compute dependency ratios
+  overall_dependency <- (young_population + senior_population) / working_population
+  youth_dependency <- young_population / working_population
+  elderly_dependency <- senior_population / working_population
+  
+  # Return results as a named vector
+  return(c(Overall_Dependency = overall_dependency, 
+           Youth_Dependency = youth_dependency, 
+           Elderly_Dependency = elderly_dependency))
+}
+
+# Define the years to calculate dependency ratios
+years <- c("2011", "2016", "2021", "2026", "2031", "2036")
+
+# Create a table with dependency ratios for all years
+dependency_ratios_chhattisgarh <- as.data.frame(t(sapply(years, function(y) calculate_dependency_ratios(chhattisgarh_population, y))))
+
+# Add year column
+dependency_ratios_chhattisgarh <- dependency_ratios_chhattisgarh %>%
+  mutate(Year = years) %>%
+  select(Year, everything())
+
+# Print the table
+print(dependency_ratios_chhattisgarh)
+
+```
+
+
+
+#Gujarat
+```{r}
+# Load necessary libraries
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+# Create data frame for Gujarat
+gujarat_population <- data.frame(
+  Age_Group = c("0-14", "15-19", "20-24", "25-29", "30-34", "35-39", "40-44", "45-49", "50-54", "55-59", "60-64", "65-69", "70-74", "75-79", "80+"),
+  Male_2011 = c(9927, 3168, 3013, 2773, 2500, 2253, 1997, 1714, 1398, 1089, 826, 595, 455, 255, 137),
+  Female_2011 = c(8740, 2771, 2686, 2525, 2309, 2093, 1864, 1597, 1304, 1054, 851, 652, 539, 305, 203),
+  Male_2016 = c(9927, 3279, 3244, 3055, 2794, 2499, 2229, 1961, 1647, 1322, 999, 722, 482, 337, 214),
+  Female_2016 = c(8582, 2842, 2854, 2699, 2521, 2300, 2077, 1841, 1565, 1266, 1002, 779, 565, 430, 306),
+  Male_2021 = c(9969, 3210, 3365, 3293, 3081, 2796, 2478, 2195, 1894, 1568, 1225, 888, 602, 370, 305),
+  Female_2021 = c(8541, 2780, 2934, 2870, 2697, 2513, 2284, 2053, 1807, 1524, 1210, 925, 685, 462, 450),
+  Male_2026 = c(9977, 3100, 3306, 3420, 3323, 3087, 2777, 2445, 2128, 1811, 1464, 1102, 754, 471, 378),
+  Female_2026 = c(8493, 2710, 2882, 2954, 2870, 2689, 2497, 2260, 2019, 1764, 1462, 1127, 826, 572, 565),
+  Male_2031 = c(9633, 3284, 3204, 3367, 3455, 3332, 3068, 2744, 2376, 2042, 1701, 1328, 948, 599, 479),
+  Female_2031 = c(8343, 2711, 2821, 2906, 2956, 2864, 2675, 2475, 2226, 1975, 1700, 1373, 1019, 703, 711),
+  Male_2036 = c(9186, 3289, 3396, 3273, 3408, 3468, 3316, 3036, 2674, 2288, 1927, 1555, 1157, 763, 611),
+  Female_2036 = c(8043, 2756, 2829, 2848, 2911, 2952, 2851, 2653, 2440, 2182, 1910, 1606, 1255, 880, 891)
+)
+
+# Convert data to long format
+gujarat_long <- gujarat_population %>%
+  pivot_longer(cols = starts_with("Male") | starts_with("Female"),
+               names_to = c("Gender", "Year"),
+               names_pattern = "(Male|Female)_(\\d+)",
+               values_to = "Population") %>%
+  mutate(
+    Population = ifelse(Gender == "Male", -Population, Population) # Negative values for Male
+  )
+
+# Plot age pyramid
+ggplot(gujarat_long, aes(x = Age_Group, y = Population, fill = Gender)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  scale_y_continuous(labels = abs) + # Keep labels positive
+  scale_fill_manual(values = c("Male" = "#ce4a37", "Female" = "#38406b")) +
+  facet_wrap(~Year) + # Facet by Year
+  theme_minimal() +
+  labs(title = "Gujarat",
+       x = "Age Group",
+       y = "Population",
+       fill = "Gender") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Load necessary library
+library(dplyr)
+
+# Function to calculate dependency ratios
+calculate_dependency_ratios <- function(data, year) {
+  # Extract relevant columns
+  total_population <- rowSums(data[, paste0(c("Male_", "Female_"), year)])
+  
+  # Define age group indices
+  young_age_index <- which(data$Age_Group == "0-14")
+  working_population_index <- which(data$Age_Group %in% c("15-19", "20-24", "25-29", "30-34", 
+                                                          "35-39", "40-44", "45-49", "50-54", "55-59"))
+  senior_population_index <- which(data$Age_Group %in% c("60-64", "65-69", "70-74", "75-79", "80+"))
+  
+  # Calculate population sums for each category
+  young_population <- sum(total_population[young_age_index])
+  working_population <- sum(total_population[working_population_index])
+  senior_population <- sum(total_population[senior_population_index])
+  
+  # Compute dependency ratios
+  overall_dependency <- (young_population + senior_population) / working_population
+  youth_dependency <- young_population / working_population
+  elderly_dependency <- senior_population / working_population
+  
+  # Return results as a named vector
+  return(c(Overall_Dependency = overall_dependency, 
+           Youth_Dependency = youth_dependency, 
+           Elderly_Dependency = elderly_dependency))
+}
+
+# Define the years to calculate dependency ratios
+years <- c("2011", "2016", "2021", "2026", "2031", "2036")
+
+# Create a table with dependency ratios for all years
+dependency_ratios_gujarat <- as.data.frame(t(sapply(years, function(y) calculate_dependency_ratios(gujarat_population, y))))
+
+# Add year column
+dependency_ratios_gujarat <- dependency_ratios_gujarat %>%
+  mutate(Year = years) %>%
+  select(Year, everything())
+
+# Print the table
+print(dependency_ratios_gujarat)
+
+```
+
+
+
+#Jharkhand
+```{r}
+# Load necessary libraries
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+# Create data frame for Jharkhand
+jharkhand_population <- data.frame(
+  Age_Group = c("0-14", "15-19", "20-24", "25-29", "30-34", "35-39", "40-44", "45-49", "50-54", "55-59", "60-64", "65-69", "70-74", "75-79", "80+"),
+  Male_2011 = c(6539, 1750, 1485, 1325, 1196, 1074, 942, 790, 634, 520, 440, 332, 230, 57, 31),
+  Female_2011 = c(6212, 1598, 1403, 1294, 1163, 1025, 877, 726, 593, 513, 447, 330, 223, 35, 23),
+  Male_2016 = c(6365, 2008, 1735, 1470, 1310, 1178, 1055, 916, 760, 600, 476, 386, 270, 174, 47),
+  Female_2016 = c(5991, 1878, 1600, 1396, 1284, 1150, 1010, 861, 707, 567, 480, 397, 269, 172, 33),
+  Male_2021 = c(6189, 2034, 1992, 1718, 1454, 1292, 1158, 1028, 883, 721, 553, 421, 319, 208, 120),
+  Female_2021 = c(5770, 1952, 1881, 1593, 1387, 1271, 1134, 994, 840, 678, 533, 431, 331, 213, 121),
+  Male_2026 = c(6020, 1990, 2017, 1973, 1700, 1435, 1271, 1131, 994, 841, 669, 493, 353, 249, 179),
+  Female_2026 = c(5545, 1939, 1956, 1873, 1583, 1374, 1255, 1117, 971, 808, 641, 484, 366, 268, 201),
+  Male_2031 = c(5911, 1866, 1973, 1999, 1954, 1679, 1414, 1243, 1095, 948, 783, 600, 418, 278, 236),
+  Female_2031 = c(5507, 1716, 1945, 1949, 1862, 1569, 1358, 1237, 1094, 937, 768, 586, 416, 301, 285),
+  Male_2036 = c(5713, 1864, 1850, 1955, 1980, 1932, 1656, 1384, 1205, 1047, 886, 707, 514, 333, 286),
+  Female_2036 = c(5362, 1735, 1724, 1938, 1938, 1847, 1552, 1340, 1213, 1058, 893, 707, 511, 348, 360)
+)
+
+# Convert data to long format
+jharkhand_long <- jharkhand_population %>%
+  pivot_longer(cols = starts_with("Male") | starts_with("Female"),
+               names_to = c("Gender", "Year"),
+               names_pattern = "(Male|Female)_(\\d+)",
+               values_to = "Population") %>%
+  mutate(
+    Population = ifelse(Gender == "Male", -Population, Population) # Negative values for Male
+  )
+
+# Plot age pyramid
+ggplot(jharkhand_long, aes(x = Age_Group, y = Population, fill = Gender)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  scale_y_continuous(labels = abs) + # Keep labels positive
+  scale_fill_manual(values = c("Male" = "#ce4a37", "Female" = "#38406b")) +
+  facet_wrap(~Year) + # Facet by Year
+  theme_minimal() +
+  labs(title = "Jharkhand",
+       x = "Age Group",
+       y = "Population",
+       fill = "Gender") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Load necessary library
+library(dplyr)
+
+# Function to calculate dependency ratios
+calculate_dependency_ratios <- function(data, year) {
+  # Extract relevant columns
+  total_population <- rowSums(data[, paste0(c("Male_", "Female_"), year)])
+  
+  # Define age group indices
+  young_age_index <- which(data$Age_Group == "0-14")
+  working_population_index <- which(data$Age_Group %in% c("15-19", "20-24", "25-29", "30-34", 
+                                                          "35-39", "40-44", "45-49", "50-54", "55-59"))
+  senior_population_index <- which(data$Age_Group %in% c("60-64", "65-69", "70-74", "75-79", "80+"))
+  
+  # Calculate population sums for each category
+  young_population <- sum(total_population[young_age_index])
+  working_population <- sum(total_population[working_population_index])
+  senior_population <- sum(total_population[senior_population_index])
+  
+  # Compute dependency ratios
+  overall_dependency <- (young_population + senior_population) / working_population
+  youth_dependency <- young_population / working_population
+  elderly_dependency <- senior_population / working_population
+  
+  # Return results as a named vector
+  return(c(Overall_Dependency = overall_dependency, 
+           Youth_Dependency = youth_dependency, 
+           Elderly_Dependency = elderly_dependency))
+}
+
+# Define the years to calculate dependency ratios
+years <- c("2011", "2016", "2021", "2026", "2031", "2036")
+
+# Create a table with dependency ratios for all years
+dependency_ratios_jharkhand <- as.data.frame(t(sapply(years, function(y) calculate_dependency_ratios(jharkhand_population, y))))
+
+# Add year column
+dependency_ratios_jharkhand <- dependency_ratios_jharkhand %>%
+  mutate(Year = years) %>%
+  select(Year, everything())
+
+# Print the table
+print(dependency_ratios_jharkhand)
+```
+
+
+
+#Karnataka
+```{r}
+# Load necessary libraries
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+# Create data frame for Karnataka
+karnataka_population <- data.frame(
+  Age_Group = c("0-14", "15-19", "20-24", "25-29", "30-34", "35-39", "40-44", "45-49", "50-54", "55-59", "60-64", "65-69", "70-74", "75-79", "80+"),
+  Male_2011 = c(8766, 3040, 3038, 2817, 2496, 2253, 2022, 1744, 1407, 1123, 943, 739, 566, 350, 188),
+  Female_2011 = c(8300, 2826, 2893, 2761, 2473, 2229, 1949, 1650, 1360, 1140, 1004, 803, 633, 368, 245),
+  Male_2016 = c(8488, 2932, 3060, 3038, 2799, 2462, 2207, 1966, 1671, 1325, 1031, 826, 603, 410, 283),
+  Female_2016 = c(7954, 2731, 2841, 2882, 2743, 2456, 2210, 1920, 1613, 1312, 1070, 902, 683, 483, 349),
+  Male_2021 = c(8140, 2763, 2956, 3063, 3022, 2766, 2417, 2152, 1891, 1581, 1225, 914, 688, 450, 372),
+  Female_2021 = c(7557, 2592, 2751, 2833, 2865, 2725, 2436, 2180, 1880, 1561, 1238, 970, 779, 535, 485),
+  Male_2026 = c(7768, 2622, 2791, 2963, 3051, 2989, 2719, 2362, 2076, 1796, 1470, 1096, 771, 523, 447),
+  Female_2026 = c(7128, 2482, 2616, 2745, 2818, 2848, 2705, 2405, 2138, 1823, 1479, 1132, 849, 624, 606),
+  Male_2031 = c(7250, 2661, 2653, 2801, 2954, 3022, 2943, 2661, 2283, 1978, 1677, 1324, 934, 596, 534),
+  Female_2031 = c(6679, 2411, 2508, 2613, 2732, 2803, 2828, 2673, 2361, 2076, 1734, 1361, 1001, 692, 741),
+  Male_2036 = c(6850, 2469, 2693, 2665, 2797, 2930, 2979, 2885, 2578, 2181, 1853, 1519, 1138, 731, 626),
+  Female_2036 = c(6325, 2242, 2441, 2507, 2603, 2719, 2785, 2796, 2626, 2298, 1982, 1606, 1216, 829, 873)
+)
+
+# Convert data to long format
+karnataka_long <- karnataka_population %>%
+  pivot_longer(cols = starts_with("Male") | starts_with("Female"),
+               names_to = c("Gender", "Year"),
+               names_pattern = "(Male|Female)_(\\d+)",
+               values_to = "Population") %>%
+  mutate(
+    Population = ifelse(Gender == "Male", -Population, Population) # Negative values for Male
+  )
+
+# Plot age pyramid
+ggplot(karnataka_long, aes(x = Age_Group, y = Population, fill = Gender)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  scale_y_continuous(labels = abs) + # Keep labels positive
+  scale_fill_manual(values = c("Male" = "#ce4a37", "Female" = "#38406b")) +
+  facet_wrap(~Year) + # Facet by Year
+  theme_minimal() +
+  labs(title = "Karnataka",
+       x = "Age Group",
+       y = "Population",
+       fill = "Gender") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Load necessary library
+library(dplyr)
+
+# Function to calculate dependency ratios
+calculate_dependency_ratios <- function(data, year) {
+  # Extract relevant columns
+  total_population <- rowSums(data[, paste0(c("Male_", "Female_"), year)])
+  
+  # Define age group indices
+  young_age_index <- which(data$Age_Group == "0-14")
+  working_population_index <- which(data$Age_Group %in% c("15-19", "20-24", "25-29", "30-34", 
+                                                          "35-39", "40-44", "45-49", "50-54", "55-59"))
+  senior_population_index <- which(data$Age_Group %in% c("60-64", "65-69", "70-74", "75-79", "80+"))
+  
+  # Calculate population sums for each category
+  young_population <- sum(total_population[young_age_index])
+  working_population <- sum(total_population[working_population_index])
+  senior_population <- sum(total_population[senior_population_index])
+  
+  # Compute dependency ratios
+  overall_dependency <- (young_population + senior_population) / working_population
+  youth_dependency <- young_population / working_population
+  elderly_dependency <- senior_population / working_population
+  
+  # Return results as a named vector
+  return(c(Overall_Dependency = overall_dependency, 
+           Youth_Dependency = youth_dependency, 
+           Elderly_Dependency = elderly_dependency))
+}
+
+# Define the years to calculate dependency ratios
+years <- c("2011", "2016", "2021", "2026", "2031", "2036")
+
+# Create a table with dependency ratios for all years
+dependency_ratios_karnataka <- as.data.frame(t(sapply(years, function(y) calculate_dependency_ratios(karnataka_population, y))))
+
+# Add year column
+dependency_ratios_karnataka <- dependency_ratios_karnataka %>%
+  mutate(Year = years) %>%
+  select(Year, everything())
+
+# Print the table
+print(dependency_ratios_karnataka)
+
+``` 
+
+
+
+#Kerala
+```{r}
+# Load necessary libraries
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+# Create Kerala population data
+kerala_population <- data.frame(
+  Age_Group = c("0-14", "15-19", "20-24", "25-29", "30-34", "35-39", "40-44", "45-49", "50-54", "55-59", "60-64", "65-69", "70-74", "75-79", "80+"),
+  Male_2011 = c(4253, 1350, 1284, 1210, 1157, 1144, 1127, 1066, 958, 836, 673, 483, 369, 256, 320),
+  Female_2011 = c(4096, 1330, 1355, 1375, 1369, 1366, 1314, 1196, 1030, 873, 721, 556, 453, 333, 486),
+  Male_2016 = c(4093, 1373, 1340, 1272, 1199, 1144, 1125, 1101, 1030, 911, 775, 600, 448, 322, 398),
+  Female_2016 = c(3934, 1312, 1303, 1345, 1367, 1361, 1357, 1301, 1178, 1008, 842, 679, 535, 409, 573),
+  Male_2021 = c(3935, 1316, 1363, 1329, 1261, 1186, 1127, 1102, 1067, 983, 849, 696, 580, 390, 472),
+  Female_2021 = c(3776, 1255, 1284, 1292, 1337, 1358, 1352, 1343, 1282, 1153, 974, 795, 661, 486, 662),
+  Male_2026 = c(3795, 1278, 1306, 1352, 1317, 1248, 1170, 1104, 1068, 1020, 919, 767, 675, 500, 583),
+  Female_2026 = c(3635, 1218, 1227, 1273, 1284, 1328, 1350, 1339, 1325, 1256, 1116, 922, 774, 597, 786),
+  Male_2031 = c(3671, 1225, 1268, 1295, 1340, 1304, 1232, 1147, 1072, 1023, 956, 833, 750, 583, 672),
+  Female_2031 = c(3516, 1162, 1189, 1216, 1265, 1277, 1320, 1337, 1321, 1299, 1218, 1060, 891, 705, 905),
+  Male_2036 = c(3564, 1169, 1216, 1258, 1284, 1328, 1288, 1209, 1116, 1029, 962, 871, 799, 642, 738),
+  Female_2036 = c(3413, 1108, 1133, 1179, 1208, 1258, 1269, 1309, 1320, 1297, 1261, 1160, 1006, 822, 1027)
+)
+
+# Convert data to long format
+kerala_long <- kerala_population %>%
+  pivot_longer(cols = starts_with("Male") | starts_with("Female"),
+               names_to = c("Gender", "Year"),
+               names_pattern = "(Male|Female)_(\\d+)",
+               values_to = "Population") %>%
+  mutate(
+    Population = ifelse(Gender == "Male", -Population, Population) # Negative values for Male
+  )
+
+# Plot age pyramid
+ggplot(kerala_long, aes(x = Age_Group, y = Population, fill = Gender)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  scale_y_continuous(labels = abs) + # Keep labels positive
+  scale_fill_manual(values = c("Male" = "#ce4a37", "Female" = "#38406b")) +
+  facet_wrap(~Year) + # Facet by Year
+  theme_minimal() +
+  labs(title = "Kerala",
+       x = "Age Group",
+       y = "Population",
+       fill = "Gender") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Load necessary library
+library(dplyr)
+
+# Function to calculate dependency ratios
+calculate_dependency_ratios <- function(data, year) {
+  # Extract relevant columns
+  total_population <- rowSums(data[, paste0(c("Male_", "Female_"), year)])
+  
+  # Define age group indices
+  young_age_index <- which(data$Age_Group == "0-14")
+  working_population_index <- which(data$Age_Group %in% c("15-19", "20-24", "25-29", "30-34", 
+                                                          "35-39", "40-44", "45-49", "50-54", "55-59"))
+  senior_population_index <- which(data$Age_Group %in% c("60-64", "65-69", "70-74", "75-79", "80+"))
+  
+  # Calculate population sums for each category
+  young_population <- sum(total_population[young_age_index])
+  working_population <- sum(total_population[working_population_index])
+  senior_population <- sum(total_population[senior_population_index])
+  
+  # Compute dependency ratios
+  overall_dependency <- (young_population + senior_population) / working_population
+  youth_dependency <- young_population / working_population
+  elderly_dependency <- senior_population / working_population
+  
+  # Return results as a named vector
+  return(c(Overall_Dependency = overall_dependency, 
+           Youth_Dependency = youth_dependency, 
+           Elderly_Dependency = elderly_dependency))
+}
+
+# Define the years to calculate dependency ratios
+years <- c("2011", "2016", "2021", "2026", "2031", "2036")
+
+# Create a table with dependency ratios for all years
+dependency_ratios_kerala <- as.data.frame(t(sapply(years, function(y) calculate_dependency_ratios(kerala_population, y))))
+
+# Add year column
+dependency_ratios_kerala <- dependency_ratios_kerala %>%
+  mutate(Year = years) %>%
+  select(Year, everything())
+
+# Print the table
+print(dependency_ratios_kerala)
+
+```
+
+
+
+#Madhya Pradesh
+```{r}
+# Load necessary libraries
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+# Create data frame for Madhya Pradesh
+madhya_pradesh_population <- data.frame(
+  Age_Group = c("0-14", "15-19", "20-24", "25-29", "30-34", "35-39", "40-44", "45-49", "50-54", "55-59", "60-64", "65-69", "70-74", "75-79", "80+"),
+  Male_2011 = c(13483, 3993, 3523, 3049, 2699, 2461, 2183, 1832, 1442, 1125, 923, 725, 582, 285, 153),
+  Female_2011 = c(12488, 3562, 3157, 2837, 2577, 2333, 2026, 1661, 1303, 1077, 944, 764, 628, 272, 182),
+  Male_2016 = c(13743, 4260, 3940, 3471, 3004, 2651, 2407, 2114, 1749, 1356, 1022, 784, 561, 401, 218),
+  Female_2016 = c(12710, 3882, 3502, 3121, 2809, 2551, 2307, 1992, 1619, 1257, 1011, 835, 623, 465, 250),
+  Male_2021 = c(13769, 4172, 4207, 3887, 3425, 2956, 2599, 2339, 2027, 1653, 1243, 884, 627, 404, 321),
+  Female_2021 = c(12735, 3851, 3821, 3466, 3093, 2783, 2525, 2272, 1946, 1566, 1188, 906, 698, 480, 411),
+  Male_2026 = c(13776, 3957, 4122, 4153, 3838, 3374, 2902, 2531, 2250, 1924, 1526, 1089, 721, 465, 385),
+  Female_2026 = c(12723, 3719, 3793, 3785, 3437, 3067, 2758, 2490, 2224, 1888, 1489, 1079, 776, 557, 528),
+  Male_2031 = c(12990, 4430, 3909, 4070, 4104, 3786, 3318, 2832, 2442, 2144, 1787, 1352, 906, 548, 459),
+  Female_2031 = c(12116, 4046, 3662, 3759, 3757, 3411, 3041, 2722, 2441, 2164, 1803, 1365, 939, 634, 654),
+  Male_2036 = c(12212, 4255, 4380, 3861, 4024, 4052, 3727, 3244, 2739, 2333, 2001, 1598, 1141, 700, 551),
+  Female_2036 = c(11471, 3924, 3989, 3631, 3732, 3730, 3384, 3005, 2673, 2380, 2074, 1668, 1206, 782, 788)
+)
+
+# Convert data to long format
+madhya_pradesh_long <- madhya_pradesh_population %>%
+  pivot_longer(cols = starts_with("Male") | starts_with("Female"),
+               names_to = c("Gender", "Year"),
+               names_pattern = "(Male|Female)_(\\d+)",
+               values_to = "Population") %>%
+  mutate(
+    Population = ifelse(Gender == "Male", -Population, Population) # Negative values for Male
+  )
+
+# Plot age pyramid
+ggplot(madhya_pradesh_long, aes(x = Age_Group, y = Population, fill = Gender)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  scale_y_continuous(labels = abs) + # Keep labels positive
+  scale_fill_manual(values = c("Male" = "#ce4a37", "Female" = "#38406b")) +
+  facet_wrap(~Year) + # Facet by Year
+  theme_minimal() +
+  labs(title = "Madhya Pradesh",
+       x = "Age Group",
+       y = "Population",
+       fill = "Gender") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Load necessary library
+library(dplyr)
+
+# Function to calculate dependency ratios
+calculate_dependency_ratios <- function(data, year) {
+  # Extract relevant columns
+  total_population <- rowSums(data[, paste0(c("Male_", "Female_"), year)])
+  
+  # Define age group indices
+  young_age_index <- which(data$Age_Group == "0-14")
+  working_population_index <- which(data$Age_Group %in% c("15-19", "20-24", "25-29", "30-34", 
+                                                          "35-39", "40-44", "45-49", "50-54", "55-59"))
+  senior_population_index <- which(data$Age_Group %in% c("60-64", "65-69", "70-74", "75-79", "80+"))
+  
+  # Calculate population sums for each category
+  young_population <- sum(total_population[young_age_index])
+  working_population <- sum(total_population[working_population_index])
+  senior_population <- sum(total_population[senior_population_index])
+  
+  # Compute dependency ratios
+  overall_dependency <- (young_population + senior_population) / working_population
+  youth_dependency <- young_population / working_population
+  elderly_dependency <- senior_population / working_population
+  
+  # Return results as a named vector
+  return(c(Overall_Dependency = overall_dependency, 
+           Youth_Dependency = youth_dependency, 
+           Elderly_Dependency = elderly_dependency))
+}
+
+# Define the years to calculate dependency ratios
+years <- c("2011", "2016", "2021", "2026", "2031", "2036")
+
+# Create a table with dependency ratios for all years
+dependency_ratios_mp <- as.data.frame(t(sapply(years, function(y) calculate_dependency_ratios(madhya_pradesh_population, y))))
+
+# Add year column
+dependency_ratios_mp <- dependency_ratios_mp %>%
+  mutate(Year = years) %>%
+  select(Year, everything())
+
+# Print the table
+print(dependency_ratios_mp)
+
+```
+
+
+#Maharashtra
+```{r}
+# Load necessary libraries
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+# Create data frame for Maharashtra
+maharashtra_population <- data.frame(
+  Age_Group = c("0-14", "15-19", "20-24", "25-29", "30-34", "35-39", "40-44", "45-49", "50-54", "55-59", "60-64", "65-69", "70-74", "75-79", "80+"),
+  Male_2011 = c(16847, 5754, 5690, 5251, 4656, 4191, 3718, 3151, 2573, 2069, 1718, 1414, 1148, 695, 374),
+  Female_2011 = c(15099, 5056, 5088, 4831, 4373, 3960, 3476, 2916, 2384, 2029, 1857, 1582, 1262, 678, 452),
+  Male_2016 = c(15982, 5672, 5883, 5753, 5274, 4641, 4143, 3654, 3053, 2449, 1914, 1524, 1185, 869, 593),
+  Female_2016 = c(14148, 5026, 5218, 5118, 4826, 4355, 3933, 3440, 2867, 2321, 1929, 1698, 1365, 995, 655),
+  Male_2021 = c(15253, 5424, 5813, 5953, 5778, 5259, 4592, 4077, 3546, 2913, 2275, 1710, 1290, 910, 815),
+  Female_2021 = c(13386, 4818, 5200, 5252, 5116, 4808, 4326, 3894, 3386, 2795, 2215, 1777, 1484, 1098, 974),
+  Male_2026 = c(14397, 5238, 5574, 5892, 5985, 5765, 5207, 4524, 3962, 3392, 2718, 2047, 1463, 1005, 967),
+  Female_2026 = c(12532, 4665, 5005, 5239, 5253, 5098, 4779, 4287, 3837, 3306, 2676, 2054, 1572, 1217, 1244),
+  Male_2031 = c(13672, 4915, 5398, 5663, 5932, 5978, 5714, 5135, 4405, 3800, 3179, 2462, 1767, 1153, 1111),
+  Female_2031 = c(12000, 4202, 4862, 5049, 5243, 5238, 5070, 4738, 4227, 3751, 3174, 2495, 1833, 1307, 1493),
+  Male_2036 = c(12902, 4762, 5083, 5493, 5711, 5932, 5929, 5637, 5004, 4231, 3571, 2890, 2137, 1404, 1280),
+  Female_2036 = c(11377, 4103, 4409, 4910, 5057, 5231, 5211, 5030, 4675, 4137, 3611, 2975, 2247, 1544, 1716)
+)
+
+# Convert data to long format
+maharashtra_long <- maharashtra_population %>%
+  pivot_longer(cols = starts_with("Male") | starts_with("Female"),
+               names_to = c("Gender", "Year"),
+               names_pattern = "(Male|Female)_(\\d+)",
+               values_to = "Population") %>%
+  mutate(
+    Population = ifelse(Gender == "Male", -Population, Population) # Negative values for Male
+  )
+
+# Plot age pyramid
+ggplot(maharashtra_long, aes(x = Age_Group, y = Population, fill = Gender)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  scale_y_continuous(labels = abs) + # Keep labels positive
+  scale_fill_manual(values = c("Male" = "#ce4a37", "Female" = "#38406b")) +
+  facet_wrap(~Year) + # Facet by Year
+  theme_minimal() +
+  labs(title = "Maharashtra",
+       x = "Age Group",
+       y = "Population",
+       fill = "Gender") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Load necessary library
+library(dplyr)
+
+# Function to calculate dependency ratios
+calculate_dependency_ratios <- function(data, year) {
+  # Extract relevant columns
+  total_population <- rowSums(data[, paste0(c("Male_", "Female_"), year)])
+  
+  # Define age group indices
+  young_age_index <- which(data$Age_Group == "0-14")
+  working_population_index <- which(data$Age_Group %in% c("15-19", "20-24", "25-29", "30-34", 
+                                                          "35-39", "40-44", "45-49", "50-54", "55-59"))
+  senior_population_index <- which(data$Age_Group %in% c("60-64", "65-69", "70-74", "75-79", "80+"))
+  
+  # Calculate population sums for each category
+  young_population <- sum(total_population[young_age_index])
+  working_population <- sum(total_population[working_population_index])
+  senior_population <- sum(total_population[senior_population_index])
+  
+  # Compute dependency ratios
+  overall_dependency <- (young_population + senior_population) / working_population
+  youth_dependency <- young_population / working_population
+  elderly_dependency <- senior_population / working_population
+  
+  # Return results as a named vector
+  return(c(Overall_Dependency = overall_dependency, 
+           Youth_Dependency = youth_dependency, 
+           Elderly_Dependency = elderly_dependency))
+}
+
+# Define the years to calculate dependency ratios
+years <- c("2011", "2016", "2021", "2026", "2031", "2036")
+
+# Create a table with dependency ratios for all years
+dependency_ratios_maharashtra <- as.data.frame(t(sapply(years, function(y) calculate_dependency_ratios(maharashtra_population, y))))
+
+# Add year column
+dependency_ratios_maharashtra <- dependency_ratios_maharashtra %>%
+  mutate(Year = years) %>%
+  select(Year, everything())
+
+# Print the table
+print(dependency_ratios_maharashtra)
+
+```
+
+
+
+#Tamil Nadu
+```{r}
+# Load necessary libraries
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+# Create data frame
+tamil_nadu_population <- data.frame(
+  Age_Group = c("0-14", "15-19", "20-24", "25-29", "30-34", "35-39", "40-44", "45-49", "50-54", "55-59", "60-64", "65-69", "70-74", "75-79", "80+"),
+  Male_2011 = c(9315, 3204, 3197, 3138, 2970, 2775, 2575, 2296, 1919, 1585, 1300, 967, 745, 458, 247),
+  Female_2011 = c(8783, 3076, 3244, 3257, 3068, 2868, 2599, 2257, 1890, 1590, 1337, 1016, 790, 454, 303),
+  Male_2016 = c(8895, 3102, 3175, 3161, 3098, 2929, 2722, 2501, 2196, 1802, 1457, 1137, 786, 553, 377),
+  Female_2016 = c(8278, 2912, 3050, 3220, 3232, 3046, 2841, 2561, 2209, 1829, 1498, 1208, 865, 614, 429),
+  Male_2021 = c(8395, 2881, 3075, 3141, 3124, 3058, 2877, 2650, 2400, 2071, 1665, 1287, 939, 595, 505),
+  Female_2021 = c(7748, 2721, 2889, 3029, 3197, 3210, 3019, 2801, 2509, 2141, 1731, 1365, 1042, 687, 604),
+  Male_2026 = c(7872, 2708, 2857, 3043, 3106, 3085, 3007, 2805, 2549, 2271, 1923, 1482, 1076, 722, 602),
+  Female_2026 = c(7227, 2563, 2700, 2870, 3008, 3176, 3183, 2979, 2749, 2438, 2035, 1589, 1192, 844, 763),
+  Male_2031 = c(7198, 2691, 2686, 2829, 3011, 3070, 3037, 2937, 2705, 2420, 2118, 1724, 1253, 838, 731),
+  Female_2031 = c(6698, 2439, 2544, 2683, 2852, 2990, 3151, 3144, 2926, 2675, 2324, 1879, 1401, 980, 962),
+  Male_2036 = c(6658, 2438, 2670, 2660, 2800, 2979, 3025, 2971, 2838, 2576, 2266, 1912, 1474, 988, 873),
+  Female_2036 = c(6250, 2239, 2421, 2528, 2667, 2836, 2968, 3114, 3091, 2851, 2558, 2158, 1673, 1168, 1175)
+)
+
+# Convert data to long format
+tamil_nadu_long <- tamil_nadu_population %>%
+  pivot_longer(cols = starts_with("Male") | starts_with("Female"),
+               names_to = c("Gender", "Year"),
+               names_pattern = "(Male|Female)_(\\d+)",
+               values_to = "Population") %>%
+  mutate(
+    Population = ifelse(Gender == "Male", -Population, Population) # Negative values for Male
+  )
+
+# Plot age pyramid
+ggplot(tamil_nadu_long, aes(x = Age_Group, y = Population, fill = Gender)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  scale_y_continuous(labels = abs) + # Keep labels positive
+  scale_fill_manual(values = c("Male" = "#ce4a37", "Female" = "#38406b")) +
+  facet_wrap(~Year) + # Facet by Year
+  theme_minimal() +
+  labs(title = "Tamil Nadu",
+       x = "Age Group",
+       y = "Population",
+       fill = "Gender") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Load necessary library
+library(dplyr)
+
+# Function to calculate dependency ratios
+calculate_dependency_ratios <- function(data, year) {
+  # Extract relevant columns
+  total_population <- rowSums(data[, paste0(c("Male_", "Female_"), year)])
+  
+  # Define age group indices
+  young_age_index <- which(data$Age_Group == "0-14")
+  working_population_index <- which(data$Age_Group %in% c("15-19", "20-24", "25-29", "30-34", 
+                                                          "35-39", "40-44", "45-49", "50-54", "55-59"))
+  senior_population_index <- which(data$Age_Group %in% c("60-64", "65-69", "70-74", "75-79", "80+"))
+  
+  # Calculate population sums for each category
+  young_population <- sum(total_population[young_age_index])
+  working_population <- sum(total_population[working_population_index])
+  senior_population <- sum(total_population[senior_population_index])
+  
+  # Compute dependency ratios
+  overall_dependency <- (young_population + senior_population) / working_population
+  youth_dependency <- young_population / working_population
+  elderly_dependency <- senior_population / working_population
+  
+  # Return results as a named vector
+  return(c(Overall_Dependency = overall_dependency, 
+           Youth_Dependency = youth_dependency, 
+           Elderly_Dependency = elderly_dependency))
+}
+
+# Define the years to calculate dependency ratios
+years <- c("2011", "2016", "2021", "2026", "2031", "2036")
+
+# Create a table with dependency ratios for all years
+dependency_ratios_tamil_nadu <- as.data.frame(t(sapply(years, function(y) calculate_dependency_ratios(tamil_nadu_population, y))))
+
+# Add year column
+dependency_ratios_tamil_nadu <- dependency_ratios_tamil_nadu %>%
+  mutate(Year = years) %>%
+  select(Year, everything())
+
+# Print the table
+print(dependency_ratios_tamil_nadu)
+
+```
+
+
+
+#West Bengal
+```{r}
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+# Sample data (replace with actual dataset)
+west_bengal_population <- data.frame(
+  Age_Group = c("0-14", "15-19", "20-24", "25-29", "30-34", "35-39", "40-44", "45-49", "50-54", "55-59", "60-64", "65-69", "70-74", "75-79", "80+"),
+  Year_2011_Male = c(13435, 4633, 4404, 4000, 3629, 3437, 3199, 2795, 2302, 1807, 1390, 1020, 784, 490, 264),
+  Year_2011_Female = c(12867, 4386, 4250, 3909, 3553, 3326, 2973, 2482, 1983, 1583, 1299, 1008, 815, 473, 315),
+  Year_2016_Male = c(12269, 4545, 4591, 4364, 3955, 3578, 3379, 3120, 2702, 2186, 1661, 1215, 830, 572, 401),
+  Year_2016_Female = c(11702, 4308, 4338, 4218, 3882, 3525, 3290, 2929, 2429, 1915, 1488, 1161, 841, 620, 443),
+  Year_2021_Male = c(11256, 4171, 4505, 4551, 4318, 3902, 3520, 3301, 3022, 2574, 2021, 1466, 1005, 620, 526),
+  Year_2021_Female = c(10679, 3991, 4262, 4308, 4191, 3853, 3489, 3245, 2871, 2351, 1809, 1343, 986, 658, 614),
+  Year_2026_Male = c(10472, 3788, 4133, 4465, 4504, 4264, 3843, 3444, 3203, 2885, 2390, 1798, 1228, 763, 626),
+  Year_2026_Female = c(9840, 3670, 3947, 4233, 4282, 4162, 3817, 3444, 3184, 2784, 2230, 1646, 1156, 787, 749),
+  Year_2031_Male = c(9814, 3460, 3753, 4097, 4421, 4451, 4204, 3765, 3346, 3065, 2691, 2143, 1523, 946, 765),
+  Year_2031_Female = c(9239, 3245, 3628, 3921, 4209, 4254, 4126, 3771, 3383, 3094, 2651, 2044, 1435, 941, 919),
+  Year_2036_Male = c(9161, 3218, 3426, 3719, 4057, 4372, 4393, 4124, 3664, 3210, 2871, 2430, 1834, 1191, 951),
+  Year_2036_Female = c(8635, 3024, 3206, 3604, 3899, 4183, 4219, 4078, 3708, 3292, 2955, 2445, 1800, 1184, 1125)
+)
+
+# Convert data to long format
+west_bengal_long <- west_bengal_population %>%
+  pivot_longer(cols = -Age_Group, 
+               names_to = c("Year", "Gender"), 
+               names_pattern = "Year_(\\d+)_(Male|Female)", 
+               values_to = "Population") %>%
+  mutate(
+    Population = ifelse(Gender == "Male", -Population, Population) # Negative values for Male
+  )
+
+# Plot age pyramid
+ggplot(west_bengal_long, aes(x = Age_Group, y = Population, fill = Gender)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  scale_y_continuous(labels = abs) + # Keep labels positive
+  scale_fill_manual(values = c("Male" = "#ce4a37", "Female" = "#38406b")) +
+  facet_wrap(~Year) + # Facet by Year
+  theme_minimal() +
+  labs(title = "West Bengal",
+       x = "Age Group",
+       y = "Population",
+       fill = "Gender") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Load necessary library
+library(dplyr)
+
+# Function to calculate dependency ratios
+calculate_dependency_ratios <- function(data, year) {
+  # Extract relevant columns
+  total_population <- rowSums(data[, paste0("Year_", year, "_", c("Male", "Female"))])
+  
+  # Define age group indices
+  young_age_index <- which(data$Age_Group == "0-14")
+  working_population_index <- which(data$Age_Group %in% c("15-19", "20-24", "25-29", "30-34", 
+                                                          "35-39", "40-44", "45-49", "50-54", "55-59"))
+  senior_population_index <- which(data$Age_Group %in% c("60-64", "65-69", "70-74", "75-79", "80+"))
+  
+  # Calculate population sums for each category
+  young_population <- sum(total_population[young_age_index])
+  working_population <- sum(total_population[working_population_index])
+  senior_population <- sum(total_population[senior_population_index])
+  
+  # Compute dependency ratios
+  overall_dependency <- (young_population + senior_population) / working_population
+  youth_dependency <- young_population / working_population
+  elderly_dependency <- senior_population / working_population
+  
+  # Return results as a named vector
+  return(c(Overall_Dependency = overall_dependency, 
+           Youth_Dependency = youth_dependency, 
+           Elderly_Dependency = elderly_dependency))
+}
+
+# Define the years to calculate dependency ratios
+years <- c("2011", "2016", "2021", "2026", "2031", "2036")
+
+# Create a table with dependency ratios for all years
+dependency_ratios_wb <- as.data.frame(t(sapply(years, function(y) calculate_dependency_ratios(west_bengal_population, y))))
+
+# Add year column
+dependency_ratios_wb <- dependency_ratios_wb %>%
+  mutate(Year = years) %>%
+  select(Year, everything())
+
+# Print the table
+print(dependency_ratios_wb)
+```
+
+
+

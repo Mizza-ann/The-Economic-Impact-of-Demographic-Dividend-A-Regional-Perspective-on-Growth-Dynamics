@@ -1,0 +1,189 @@
+---
+title: "Correlation"
+author: "Mizza"
+date: "2025-02-18"
+output: html_document
+---
+
+```{r}
+# Load necessary library
+library(ggcorrplot)
+
+# Create the dataset
+data <- data.frame(
+  States = c("Bihar", "Chhattisgarh", "Gujarat", "Jharkhand", "Karnataka", "Kerala",
+             "Madhya Pradesh", "Maharashtra", "Rajasthan", "Tamil Nadu", "Uttar Pradesh", "West Bengal"),
+  Mean_Years_Schooling = c(7.3, 8.2, 8.3, 7.6, 9.2, 10.8, 7.7, 10.0, 7.3, 9.2, 7.7, 7.9),
+  LFPR = c(48.9, 71.8, 62.6, 61.9, 57.0, 54.3, 64.5, 59.4, 61.5, 57.1, 55.2, 57.3),
+  WPR = c(47.0, 70.1, 61.5, 60.9, 55.6, 50.5, 63.4, 57.6, 58.8, 54.7, 53.9, 56.1),
+  Dependency_Ratio = c(67.1, 44.8, 42.8, 57.1, 39.8, 47.8, 43.3, 43.2, 49.9, 40.7, 54.1, 39.7),
+  GDP_Per_Capita = c(54111000, 137329000, 273558000, 91874000, 304474000, 263945000,
+                     132010000, 252389000, 151559000, 275583000, 83636000, 139442000)
+)
+
+# Compute correlation matrix
+correlation_matrix <- cor(data[, -1], use = "complete.obs")
+
+# Print correlation of Mean Years of Schooling with other variables
+correlation_with_mys <- correlation_matrix["Mean_Years_Schooling", c("LFPR", "WPR", "Dependency_Ratio", "GDP_Per_Capita")]
+print(correlation_with_mys)
+
+# Optional: Visualizing the correlation matrix
+ggcorrplot(correlation_matrix, method = "circle", type = "lower", lab = TRUE)
+
+```
+
+
+```{r}
+# Load necessary libraries
+library(ggplot2)
+library(corrplot)
+
+# Create the dataset
+regional_data <- data.frame(
+  States = c("Bihar", "Chhattisgarh", "Gujarat", "Jharkhand", "Karnataka", "Kerala",
+             "Madhya Pradesh", "Maharashtra", "Rajasthan", "Tamil Nadu", "Uttar Pradesh", "West Bengal"),
+  Mean_Years_of_Schooling = c(7.3, 8.2, 8.3, 7.6, 9.2, 10.8, 7.7, 10.0, 7.3, 9.2, 7.7, 7.9),
+  LFPR = c(48.9, 71.8, 62.6, 61.9, 57.0, 54.3, 64.5, 59.4, 61.5, 57.1, 55.2, 57.3),
+  WPR = c(47, 70.1, 61.5, 60.9, 55.6, 50.5, 63.4, 57.6, 58.8, 54.7, 53.9, 56.1),
+  UR = c(3.9, 2.4, 1.7, 1.7, 2.4, 7.0, 1.6, 3.1, 4.4, 4.3, 2.4, 2.2),
+  Dependency_Ratio = c(67.1, 44.8, 42.8, 57.1, 39.8, 47.8, 43.3, 43.2, 49.9, 40.7, 54.1, 39.7),
+  GDP_Per_Capita = c(54111000, 137329000, 273558000, 91874000, 304474000, 263945000, 
+                      132010000, 252389000, 151559000, 275583000, 83636000, 139442000)
+)
+
+# View the dataset
+print(regional_data)
+
+# Compute correlation matrix
+cor_matrix <- cor(regional_data[, -1], use = "complete.obs")  # Exclude State names
+
+# Print correlation values
+print(cor_matrix)
+
+# Install corrplot package if not installed
+if (!require(corrplot)) install.packages("corrplot")
+
+# Load corrplot
+library(corrplot)
+
+# Plot the correlation matrix
+corrplot(cor_matrix, method = "color", type = "lower", 
+         tl.col = "black", tl.srt = 45, addCoef.col = "black")
+
+# Correlation with LFPR
+cor(regional_data$Mean_Years_of_Schooling, regional_data$LFPR)
+
+# Correlation with WPR
+cor(regional_data$Mean_Years_of_Schooling, regional_data$WPR)
+
+# Correlation with UR
+cor(regional_data$Mean_Years_of_Schooling, regional_data$UR)
+
+# Correlation with Dependency Ratio
+cor(regional_data$Mean_Years_of_Schooling, regional_data$Dependency_Ratio)
+
+# Correlation with GDP Per Capita
+cor(regional_data$Mean_Years_of_Schooling, regional_data$GDP_Per_Capita)
+
+# Scatter plot for Mean Years of Schooling vs LFPR
+ggplot(regional_data, aes(x = Mean_Years_of_Schooling, y = LFPR)) +
+  geom_point(color = "blue", size = 3) +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  ggtitle("Mean Years of Schooling vs LFPR") +
+  xlab("Mean Years of Schooling") +
+  ylab("LFPR")
+
+# Scatter plot for Mean Years of Schooling vs GDP Per Capita
+ggplot(regional_data, aes(x = Mean_Years_of_Schooling, y = GDP_Per_Capita)) +
+  geom_point(color = "green", size = 3) +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  ggtitle("Mean Years of Schooling vs GDP Per Capita") +
+  xlab("Mean Years of Schooling") +
+  ylab("GDP Per Capita")
+
+```
+
+
+#REGRESSION
+```{r}
+# Load necessary libraries
+library(ggplot2)
+library(car)
+
+# Create the dataset
+regional_data <- data.frame(
+  States = c("Bihar", "Chhattisgarh", "Gujarat", "Jharkhand", "Karnataka", "Kerala",
+             "Madhya Pradesh", "Maharashtra", "Rajasthan", "Tamil Nadu", "Uttar Pradesh", "West Bengal"),
+  Mean_Years_of_Schooling = c(7.3, 8.2, 8.3, 7.6, 9.2, 10.8, 7.7, 10.0, 7.3, 9.2, 7.7, 7.9),
+  LFPR = c(48.9, 71.8, 62.6, 61.9, 57.0, 54.3, 64.5, 59.4, 61.5, 57.1, 55.2, 57.3),
+  WPR = c(47, 70.1, 61.5, 60.9, 55.6, 50.5, 63.4, 57.6, 58.8, 54.7, 53.9, 56.1),
+  UR = c(3.9, 2.4, 1.7, 1.7, 2.4, 7.0, 1.6, 3.1, 4.4, 4.3, 2.4, 2.2),
+  Dependency_Ratio = c(67.1, 44.8, 42.8, 57.1, 39.8, 47.8, 43.3, 43.2, 49.9, 40.7, 54.1, 39.7),
+  GDP_Per_Capita = c(54111000, 137329000, 273558000, 91874000, 304474000, 263945000, 
+                      132010000, 252389000, 151559000, 275583000, 83636000, 139442000)
+)
+
+# Run linear regression
+model1 <- lm(GDP_Per_Capita ~ Mean_Years_of_Schooling, data = regional_data)
+
+# Summary of regression
+summary(model1)
+
+# Run regression
+model2 <- lm(LFPR ~ Mean_Years_of_Schooling, data = regional_data)
+
+# Summary
+summary(model2)
+
+# Run regression
+model3 <- lm(UR ~ Mean_Years_of_Schooling, data = regional_data)
+
+# Summary
+summary(model3)
+
+# Run regression
+model4 <- lm(Dependency_Ratio ~ Mean_Years_of_Schooling, data = regional_data)
+
+# Summary
+summary(model4)
+
+# Multiple regression model
+model5 <- lm(GDP_Per_Capita ~ Mean_Years_of_Schooling + LFPR + UR + Dependency_Ratio, data = regional_data)
+
+# Summary of the model
+summary(model5)
+
+# Plot diagnostic plots to check residuals
+par(mfrow=c(2,2))
+plot(model5)
+
+```
+
+
+
+##T TEST
+```{r}
+# Create a binary group: Achieved (≥8.7) vs. Not Achieved (<8.7)
+regional_data$MYS_Threshold <- ifelse(regional_data$Mean_Years_of_Schooling >= 8.7, "Achieved", "Not_Achieved")
+
+# Check number of states in each group
+table(regional_data$MYS_Threshold)
+
+# GDP per capita comparison
+t.test(GDP_Per_Capita ~ MYS_Threshold, data = regional_data, var.equal = TRUE)
+
+# LFPR comparison
+t.test(LFPR ~ MYS_Threshold, data = regional_data, var.equal = TRUE)
+
+# Unemployment Rate (UR) comparison
+t.test(UR ~ MYS_Threshold, data = regional_data, var.equal = TRUE)
+
+# Dependency Ratio comparison
+t.test(Dependency_Ratio ~ MYS_Threshold, data = regional_data, var.equal = TRUE)
+
+```
+
+
+
+
